@@ -1,8 +1,8 @@
 use rand::Rng;
 
 // Both of these should be odd in order to center player
-pub const FRAME_WIDTH:  usize = 65;
-pub const FRAME_HEIGHT: usize = 21;
+pub const FRAME_WIDTH:  usize = 105;
+pub const FRAME_HEIGHT: usize = 41;
 
 pub enum Direction {
     Left,
@@ -14,7 +14,6 @@ pub enum Direction {
 pub struct Maze {
     frame: [char; FRAME_WIDTH*FRAME_HEIGHT],
 }
-
 
 impl Maze {
     // Creating a new maze
@@ -51,10 +50,12 @@ impl Maze {
                     }
                     // Generate more of maze
                     let mut old_maze: [char; FRAME_HEIGHT] = [' '; FRAME_HEIGHT];
+                    let mut old_maze2: [char; FRAME_HEIGHT] = [' '; FRAME_HEIGHT];
                     for i in 0..FRAME_HEIGHT {
                         old_maze[i] = self.frame[(i*FRAME_WIDTH)];
+                        old_maze2[i] = self.frame[(i*FRAME_WIDTH) + 1];
                     }
-                    MazeGenerator::gen_more(&mut old_maze);
+                    MazeGenerator::gen_more(&mut old_maze, &old_maze2);
                     for i in 0..FRAME_HEIGHT {
                         self.frame[(i*FRAME_WIDTH)] = old_maze[i];
                     }
@@ -67,10 +68,12 @@ impl Maze {
                     }
                     // Generate more of maze
                     let mut old_maze: [char; FRAME_HEIGHT] = [' '; FRAME_HEIGHT];
+                    let mut old_maze2: [char; FRAME_HEIGHT] = [' '; FRAME_HEIGHT];
                     for i in 0..FRAME_HEIGHT {
                         old_maze[i] = self.frame[(i*FRAME_WIDTH + FRAME_WIDTH-1)];
+                        old_maze2[i] = self.frame[(i*FRAME_WIDTH + FRAME_WIDTH-2)];
                     }
-                    MazeGenerator::gen_more(&mut old_maze);
+                    MazeGenerator::gen_more(&mut old_maze, &old_maze2);
                     for i in 0..FRAME_HEIGHT {
                         self.frame[(i*FRAME_WIDTH + FRAME_WIDTH-1)] = old_maze[i];
                     }
@@ -83,10 +86,12 @@ impl Maze {
                     }
                     // Generate more of maze
                     let mut old_maze: [char; FRAME_WIDTH] = [' '; FRAME_WIDTH];
+                    let mut old_maze2: [char; FRAME_WIDTH] = [' '; FRAME_WIDTH];
                     for i in 0..FRAME_WIDTH {
                         old_maze[i] = self.frame[i];
+                        old_maze2[i] = self.frame[FRAME_WIDTH + i];
                     }
-                    MazeGenerator::gen_more(&mut old_maze);
+                    MazeGenerator::gen_more(&mut old_maze, &old_maze2);
                     for i in 0..FRAME_WIDTH {
                         self.frame[i] = old_maze[i];
                     }
@@ -99,10 +104,12 @@ impl Maze {
                     }
                     // Generate more of maze
                     let mut old_maze: [char; FRAME_WIDTH] = [' '; FRAME_WIDTH];
+                    let mut old_maze2: [char; FRAME_WIDTH] = [' '; FRAME_WIDTH];
                     for i in 0..FRAME_WIDTH {
                         old_maze[i] = self.frame[(FRAME_HEIGHT-1)*FRAME_WIDTH + i];
+                        old_maze2[i] = self.frame[(FRAME_HEIGHT-2)*FRAME_WIDTH + i];
                     }
-                    MazeGenerator::gen_more(&mut old_maze);
+                    MazeGenerator::gen_more(&mut old_maze, &old_maze2);
                     for i in 0..FRAME_WIDTH {
                         self.frame[(FRAME_HEIGHT-1)*FRAME_WIDTH + i] = old_maze[i];
                     }
@@ -132,13 +139,19 @@ impl Maze {
 // Generating more of the maze, hopefully with a wave function collapse algorithm
 struct MazeGenerator;
 impl MazeGenerator {
-    fn gen_more(prev: &mut [char]) {
+    fn gen_more(prev: &mut [char], prev2: &[char]) {
         // Superpositions of our new cells
         let mut cells = Vec::new();
         for _ in 0..prev.len() {cells.push(Superposition::new());}
 
-        let mut changed = false;
-
+        // Preliminary Collapse
+        for i in 1..(cells.len()-1) {
+            if prev2[i] == prev[i-1] && prev[i-1] == prev[i+1] && Superposition::inverse(prev2[i]) == prev[i] {
+                cells[i] = Superposition::from_char(&prev[i]);
+            }
+        }
+        
+        let mut changed = true;
         // Actually generating more 
         loop {
             if !changed { // Didnt change, must pick a random cell to collapse
