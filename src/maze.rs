@@ -1,8 +1,8 @@
 use rand::Rng;
 
 // Both of these should be odd in order to center player
-pub const FRAME_WIDTH:  usize = 105;
-pub const FRAME_HEIGHT: usize = 41;
+pub const FRAME_WIDTH:  usize = 197;
+pub const FRAME_HEIGHT: usize = 43;
 
 pub enum Direction {
     Left,
@@ -119,20 +119,44 @@ impl Maze {
     }
 
     pub fn draw (&self) {
-        println!("+{}+", "-".repeat(FRAME_WIDTH));
+        println!("#{}#", "#".repeat(FRAME_WIDTH));
         for i in 0..FRAME_HEIGHT {
-            print!("{}", '|');
+            print!("{}", '#');
             for j in 0..FRAME_WIDTH {
                 if (i == FRAME_HEIGHT/2) && (j == FRAME_WIDTH/2) {
-                    print!("{}", '@');
+                    print!("{}", '$');
                 } else {
-                    print!("{}", self.frame[i*FRAME_WIDTH + j]);
+                    if self.frame[i*FRAME_WIDTH + j] == '#' {
+                        let up = if i > 0 { self.frame[(i-1)*FRAME_WIDTH + j] } else { '#' };
+                        let down = if i < FRAME_HEIGHT-1 { self.frame[(i+1)*FRAME_WIDTH + j] } else { '#' };
+                        let left = if j > 0 { self.frame[(i)*FRAME_WIDTH + j-1] } else { '#' };
+                        let right = if j < FRAME_WIDTH-1 { self.frame[(i)*FRAME_WIDTH + j+1] } else { '#' };
+
+                        print!("{}", Maze::get_tile(up, down, left, right));
+                    } else {
+                        print!(" ");
+                    }
                 }
             }
-            print!("{}", '|');
+            print!("{}", '#');
             println!();
         }
-        println!("+{}+", "-".repeat(FRAME_WIDTH));
+        println!("#{}#", "#".repeat(FRAME_WIDTH));
+    }
+
+    fn get_tile(up: char, down: char, left: char, right: char) -> char{
+        let wall_count = ((up=='#') as i32)+((down=='#') as i32)+((left=='#') as i32)+((right=='#') as i32);
+        if wall_count != 2 {
+            return '+';
+        } else {
+            if up == '#' && down == '#' {
+                return '|';
+            } else if left == '#' && right == '#' {
+                return '-';
+            } else {
+                return '+';
+            }
+        }
     }
 }
 
